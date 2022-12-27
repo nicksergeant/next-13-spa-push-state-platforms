@@ -4,21 +4,15 @@ export const config = {
   matcher: ["/((?!api|_next|fonts|examples|.*/img).*)"],
 };
 
-export default function middleware({
-  headers,
-  nextUrl,
-}: NextRequest): NextResponse | undefined {
-  // Map custom domain to the /app/sites/:siteName/ directory.
-  const siteName = headers.get("host") === "foo.flxwebsites.com" ? "foo" : "";
+export default function middleware(req: NextRequest): NextResponse | undefined {
+  const url = req.nextUrl;
+  const hostname = req.headers.get("host") || "localhost";
+  const path = url.pathname;
 
-  // Next 13 sometimes appends 'index' to root paths after the page has loaded...
-  let pathname = nextUrl.pathname;
-  if (nextUrl.pathname === "/index") {
-    pathname = "/";
-  }
+  // Map custom domain to the /app/sites/:siteName/ directory.
+  const siteName = hostname === "foo.flxwebsites.com" ? "foo" : "";
 
   if (siteName) {
-    nextUrl.pathname = `/sites/${siteName}${pathname}`;
-    return NextResponse.rewrite(nextUrl);
+    return NextResponse.rewrite(new URL(`/sites/${siteName}${path}`, req.url));
   }
 }
